@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".Activty.MemoDetailViewActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:orientation="horizontal"
+        android:paddingBottom="10dp">
+
+
+        <Button
+            android:id="@+id/image_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:text="사진 첨부" />
+
+        <TextView
+            android:id="@+id/memo_date"
+            android:layout_width="20dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right|bottom"
+            android:visibility="invisible" />
+
+        <Button
+            android:id="@+id/memo_remove"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_toLeftOf="@id/memo_save"
+            android:text="삭제"
+            android:visibility="invisible" />
+
+        <Button
+            android:id="@+id/memo_save"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:text="저장" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/image_call_layout"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:paddingTop="10dp">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+            <ImageView
+                android:id="@+id/camera_view"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:contentDescription="@string/camera_Image"
+                android:src="@drawable/camera" />
+
+            <ImageView
+                android:id="@+id/album_view"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:contentDescription="@string/album_Image"
+                android:src="@drawable/photos" />
+
+            <ImageView
+                android:id="@+id/link_view"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:contentDescription="@string/link_Image"
+                android:src="@drawable/link" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:id="@+id/text_camera"
+                android:text="카메라"
+                android:textSize="15dp"
+                android:gravity="center"/>
+
+            <TextView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:id="@+id/text_album"
+                android:text="앨범"
+                android:textSize="15dp"
+                android:gravity="center"/>
+
+            <TextView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:id="@+id/text_link"
+                android:text="외부 링크"
+                android:textSize="15dp"
+                android:gravity="center"
+               />
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:visibility="gone"
+        android:id="@+id/image_layout"
+        >
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/image_listview"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:scrollbars="horizontal"
+            />
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
+
+        <EditText
+            android:id="@+id/memo_title"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:hint="제목"
+            android:inputType="text"
+            android:textSize="20dp"
+           />
+        <requestFocus />
+
+        <EditText
+            android:id="@+id/memo_contents"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="top|left"
+            android:hint="본문을 입력하세요"
+            android:inputType="textMultiLine"
+            android:textSize="15dp" />
+
+
+    </LinearLayout>
+
+
+</LinearLayout>

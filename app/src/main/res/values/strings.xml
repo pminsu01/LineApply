@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Line 메모장</string>
+    <string name="camera_Image">카메라</string>
+    <string name="album_Image">앨범</string>
+    <string name="link_Image">링크</string>
+    <string name="recycle_view_image">이미지 리스트뷰</string>
+</resources>
