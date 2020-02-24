@@ -190,8 +190,7 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
             @Override
             public void onClick(View v) {
 
-                CustomAlertDialog customAlertDialog = new CustomAlertDialog((v.getContext()));
-                customAlertDialog.customDialog("remove", memoIndex);
+            customDialog("remove",0);
 
 
             }
@@ -447,14 +446,16 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
                     exifDegree = 0;
                 }
 
-                String strPhotoURI = photoUri.toString();
 
-                String[] strPhotoURITemp = strPhotoURI.split("cache/");
-                String resultURI = strPhotoURITemp[1].substring(0, 13);
+                Log.e("이미지파일path",imageFilePath);
+                String resultStr = imageFilePath;
+                String[] strTemp = resultStr.split("cache/");
+                String Strjpg = strTemp[1];
+                Strjpg = Strjpg.substring(0, 13);
 
 
-                imageItemModel.setImageBitmap(tempBitmap);
-                imageItemModel.setImageFileName(resultURI);
+                imageItemModel.setImageBitmap(getImageConvert.rotate(tempBitmap, exifDegree));
+                imageItemModel.setImageFileName(Strjpg);
                 setImageViewAdapter(imageItemModel);
                 imageLinearLayout.setVisibility(View.VISIBLE);
 
@@ -501,20 +502,16 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
      */
     public File createImageFile() throws IOException {
 
-        String imageFileName = new SimpleDateFormat("yyMMdd_HHmmss").format(new Date());
-        File storageDir = getExternalFilesDir(Environment.getExternalStorageDirectory() + "/Pictures");
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
+        String cameraImageFileName = new SimpleDateFormat("yyMMdd_HHmmss").format(new Date());
+        File storageDir = this.getCacheDir();
+        File image = null;
 
+        image = File.createTempFile(cameraImageFileName, ".jpg", storageDir);
         imageFilePath = image.getAbsolutePath();
-        removeCacheFileList.add(imageAbsolutePath);
-
+        removeCacheFileList.add(imageFilePath);
         return image;
-    }
 
+    }
 
     /**
      * 2020.02.23 Erjuer01
@@ -663,8 +660,33 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
                 });
                 break;
 
+            case "remove":
+                    builder.setTitle("ApplicationName");
+                    builder.setMessage("메모를 삭제 하시겠습니까");
+
+                    builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                            DataBaseHelper dataBaseHelper = new DataBaseHelper(getApplicationContext(), DBName, null, 1);
+                            dataBaseHelper.deleteDataBase(String.valueOf(memoIndex));
+                            Intent intent = new Intent(getApplicationContext(), MemoListViewActivity.class);
+                            removeCacheFile();
+                            finish(); //새로 고침
+                            startActivity(intent);
+
+                        }
+                    });
+
+                    builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            return;
+                        }
+                    });
 
             default:
+
                 break;
 
 

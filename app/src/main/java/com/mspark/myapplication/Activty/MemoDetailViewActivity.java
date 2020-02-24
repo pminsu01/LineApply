@@ -393,7 +393,8 @@ public class MemoDetailViewActivity extends Activity implements ImageRecyclerVie
                 }
 
 
-                String resultStr = photoUri.toString();
+                Log.e(TAG,imageFilePath);
+                String resultStr = imageFilePath;
                 String[] strTemp = resultStr.split("cache/");
                 String Strjpg = strTemp[1];
                 Strjpg = Strjpg.substring(0, 13);
@@ -594,7 +595,6 @@ public class MemoDetailViewActivity extends Activity implements ImageRecyclerVie
                     }
                 });
                 break;
-
 
             default:
                 break;
