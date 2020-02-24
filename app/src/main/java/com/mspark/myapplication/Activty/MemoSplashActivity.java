@@ -45,11 +45,9 @@ public class MemoSplashActivity extends Activity {
                 } else {
                     ActivityCompat.requestPermissions(MemoSplashActivity.this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
                 }
-        }
+            }
 
-        Intent intent = new Intent(getApplication(), MemoListViewActivity.class);
-        startActivity(intent);
-            MemoSplashActivity.this.finish();
+
 
         }
     }

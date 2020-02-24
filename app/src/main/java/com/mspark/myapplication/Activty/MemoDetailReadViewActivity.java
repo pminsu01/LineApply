@@ -64,16 +64,13 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
 
     /**
      * 변수 선언
-     *
+     * <p>
      * 1. 입력 받는 변수
      * title : 입력 받는 메모장 제목
      * contents : 입력 받는 메모장 내용
      * saveButton : 메모 저장 버튼
      * imageSaveButton : 이미지 첨부 버튼
      * boolImageView : 이미지 삽입 / 취소 Flag
-     *
-     *
-     *
      */
 
     EditText title;
@@ -86,29 +83,28 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
 
     /**
      * Layout 및 view 관련
-     *
+     * <p>
      * 1) imageLinearLayout : imageLinearLayout을 Visiable, Gone을 설정하기 위해서 따로 변수 설정함
      * 2) recyclerImageView : RecyclerVIew 사용
-     *
-     *
+     * <p>
+     * <p>
      * 객체 관련
-     *
+     * <p>
      * 1) DataBaseHelp : sqlite를 쓰기 위한 선언
      * 2) imageItemModelList : RecyclerAdapter를 호출 하기 위한 이미지 List
-     *
-     *
-      */
+     */
 
     LinearLayout imageLinearLayout;
     RecyclerView recyclerImageView; //RectclerView 선언
     DataBaseHelper dataBaseHelper = null;
     ArrayList<ImageItemModel> imageItemModelList = new ArrayList<ImageItemModel>(); //Image 리스트
     ArrayList<String> removeImageList = new ArrayList<String>(); //이미지 삭제 리스트
+    ArrayList<String> removeCacheFileList = new ArrayList<String>();
 
 
     /**
      * 기타 선언들
-     *
+     * <p>
      * 1) imageFilePath : Image파일 저장 위치를 관리하기 위한 변수
      * 2) DB 이용에 필요한 DB이름과 테이블 이름
      * 3) imageAbsolutePath : 앨범 및 URL 저장 관리를 위한 변수
@@ -118,7 +114,7 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     public static final String DBName = "LineMemoPJ.db";
     public static final String TableName = "LineMemoTable";
 
-    private String imageAbsolutePath = null;
+    private String imageAbsolutePath;
     private Uri photoUri;
     /**
      * 해당 변수는 DB에서 불러온 값을 저장하기 위한 변수
@@ -194,7 +190,7 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
             public void onClick(View v) {
 
                 CustomAlertDialog customAlertDialog = new CustomAlertDialog((v.getContext()));
-                customAlertDialog.customDialog("remove",memoIndex);
+                customAlertDialog.customDialog("remove", memoIndex);
 
 
             }
@@ -213,6 +209,8 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     @Override
     public void onBackPressed() {
         // super.onBackPressed();
+        //saveMemo();
+        removeCacheFile();
         Intent intent = new Intent(this, MemoListViewActivity.class);
         startActivity(intent);
         finish();
@@ -236,8 +234,6 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
         memoItemModel.setMemoContents(contents.getText().toString());
 
 
-
-
         String imgURLString = ""; //이미지List형태를 String으로 저장하기 위한 변수
 
         if (!imageItemModelList.isEmpty()) {
@@ -250,25 +246,29 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
 
 
         if (TextUtils.isEmpty(title.getText().toString())) {
-            customDialog("titleEmpty",0); // 제목이 없을 때 customDialog 실행
+            customDialog("titleEmpty", 0); // 제목이 없을 때 customDialog 실행
 
         } else if (result > 0) {
+            removeCacheFile();
             Toast.makeText(this, "수정 되었습니다.", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, MemoListViewActivity.class);
             startActivity(intent);
             finish();
 
         } else {
+            removeCacheFile();
             Toast.makeText(this, "수정 실패하였습니다.", Toast.LENGTH_SHORT).show();
             finish();
         }
 
 
         //실제 이미지 사진 삭제 함수 호출
-        if(!removeImageList.isEmpty()){
+        if (!removeImageList.isEmpty()) {
             removeImageFile();
         }
 
+
+        removeCacheFile();
 
     }
 
@@ -277,16 +277,6 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
      * 버튼에 따라 카메라, 앨범, URL 사진 가져오는 메소드 실행
      */
     public void imageSelect() {
-
-        // 6.0 마쉬멜로우 이상일 경우에는 권한 체크 후 권한 요청
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "권한 설정 완료");
-            } else {
-                Log.d(TAG, "권한 설정 요청");
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-            }
-        }
 
 
         ImageView camera = findViewById(R.id.camera_view);
@@ -310,14 +300,15 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
         link.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                customDialog("getURLImage",0);
+                customDialog("getURLImage", 0);
             }
         });
     }
 
 
-    /**
+    /**2020.02.24 Erjuer01
      * getCameraImage() : 카메라 실행
+     * cache파일 저장으로 수정
      */
     private void getCameraImage() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -331,15 +322,17 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
             }
             // Continue only if the File was successfully created
             if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this,
+                photoUri = FileProvider.getUriForFile(this,
                         "com.mspark.myapplication",
                         photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+
+
+
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
                 startActivityForResult(takePictureIntent, 0);
             }
         }
     }
-
 
 
     /**
@@ -386,6 +379,7 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     /**
      * 2020.02.20 Erjuer01
      * - getCamera(). getAlbumImage() intent호출에 따른 결과 값처리
+     *
      * @param requestCode 카메라:0 , 데이터 내부 앨범:1
      * @param resultCode
      * @param data
@@ -397,24 +391,24 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
         Bitmap tempBitmap = null;
         ImageItemModel imageItemModel = new ImageItemModel();
         //getCamera()
-        if (requestCode == 0 && resultCode == RESULT_OK && data != null) {
+        if (requestCode == 0 && resultCode == RESULT_OK) {
 
 
             try {
-                tempBitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(),photoUri);
-                String resultStr = photoUri.toString();
-                String[] strTemp = resultStr.split("my_images");
 
-                String Strjpg = strTemp[1];
-                Strjpg = Strjpg.substring(1,14);
+                tempBitmap =  MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(),photoUri);
 
-                Log.d("URI주소주소주소",photoUri.toString());
-                Log.d("주소주소주소",Strjpg);
+                String strPhotoURI = photoUri.toString();
+
+                String[] strPhotoURITemp = strPhotoURI.split("cache/");
+                String resultURI = strPhotoURITemp[1].substring(0,13);
+
 
                 imageItemModel.setImageBitmap(tempBitmap);
-                imageItemModel.setImageFileName(Strjpg);
+                imageItemModel.setImageFileName(resultURI);
                 setImageViewAdapter(imageItemModel);
                 imageLinearLayout.setVisibility(View.VISIBLE);
+
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -455,7 +449,6 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
      * 2020.02.23 Erjuer01
      * - 카메라 실행 했을 때 임시 파일 저장소 Method
      * https://developer.android.com/training/camera/photobasics.html#java
-     *
      */
     public File createImageFile() throws IOException {
 
@@ -468,6 +461,8 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
         );
 
         imageFilePath = image.getAbsolutePath();
+        removeCacheFileList.add(imageAbsolutePath);
+
         return image;
     }
 
@@ -475,6 +470,7 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     /**
      * 2020.02.23 Erjuer01
      * - 이미지를 추가 했을 때 RecyclerViewAdapter 호출 하는 함수
+     *
      * @param bitmap : Image를 Bitmap 변환, 이 단계 까지는 단순히 ImageList add, save가 아니다.
      */
 
@@ -485,7 +481,7 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
         recyclerImageView.setLayoutManager(linearLayoutManager);
         imageItemModelList.add(imageItemModel);
 
-        ImageRecyclerViewAdapter imageRecyclerViewAdapter = new ImageRecyclerViewAdapter(imageItemModelList);
+        ImageRecyclerViewAdapter imageRecyclerViewAdapter = new ImageRecyclerViewAdapter(imageItemModelList, this, this);
         recyclerImageView.setAdapter(imageRecyclerViewAdapter);
         imageLinearLayout.setVisibility(View.VISIBLE);
 
@@ -494,7 +490,8 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     /**
      * 2020.02.23 Erjuer01
      * - 처음 엑티비티 실행 했을 때 RecyclerViewAdapter 호출 하는 함수
-     @param readItemImageList : DB값에 갖고 있는 ImageItem정보 ArrayList
+     *
+     * @param readItemImageList : DB값에 갖고 있는 ImageItem정보 ArrayList
      */
     public void readImageViewAdapter(ArrayList<ImageItemModel> readItemImageList) {
 
@@ -528,7 +525,6 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
 
 
     /**
-     *
      * 2020.02.23 Erjuer01
      * customDialog if문 -> Swith문 변경
      * - Case 별로 Dialog 표시
@@ -541,10 +537,10 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     public void customDialog(String index, final int position) {
 
 
-        final int removeImagePosition =position;
+        final int removeImagePosition = position;
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        switch (index){
+        switch (index) {
             case "getURLImage":
                 final EditText editText = new EditText(this);
 
@@ -578,7 +574,7 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
                 builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-
+                        removeCacheFile();
                         finish();
 
                     }
@@ -619,8 +615,8 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
                 break;
 
 
-            default: break;
-
+            default:
+                break;
 
 
         }
@@ -631,11 +627,9 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     }
 
 
-
-
-
-    /** 2020.02.23 Erjuer01
-     *- Activty 이동시 DB값에 있는 데이터 바탕으로 HashMap 형태 return
+    /**
+     * 2020.02.23 Erjuer01
+     * - Activty 이동시 DB값에 있는 데이터 바탕으로 HashMap 형태 return
      */
     public HashMap<String, String> selectDataBase() {
 
@@ -653,8 +647,9 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     }
 
 
-    /** 2020.02.23 Erjuer01
-     *- selectDataBase()를 실행하여 얻은 값으로 set
+    /**
+     * 2020.02.23 Erjuer01
+     * - selectDataBase()를 실행하여 얻은 값으로 set
      */
     public void setMemoDetailView() {
 
@@ -668,7 +663,7 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
         memoImage = selectDB.get("memoImage");
         memoDate = selectDB.get("memoDate");
 
-        Log.d(TAG,memoImage);
+        Log.d(TAG, memoImage);
         if (memoImage.equals("")) {
             imageItemModelList.clear();
         } else {
@@ -678,9 +673,6 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
             GetImageConvert getImageConvert = new GetImageConvert();
             imageItemModelList = getImageArrayConvert.ImageStringArrayToList(memoImage, this);
             readImageViewAdapter(imageItemModelList);
-            for (int i = 0; i < imageItemModelList.size(); i++) {
-                Log.d(TAG, imageItemModelList.get(i).getImageFileName());
-            }
 
 
         }
@@ -691,17 +683,18 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
 
     }
 
-    /** 2020.02.23 Erjuer01
-     *- 이미지 리스트에서 이미지 삭제 후 saveMemo 함수 호출 시 실제 ImageFile 삭제
+    /**
+     * 2020.02.23 Erjuer01
+     * - 이미지 리스트에서 이미지 삭제 후 saveMemo 함수 호출 시 실제 ImageFile 삭제
      */
     public void removeImageFile() {
 
         Iterator<String> itr = removeImageList.iterator();
 
-        while(itr.hasNext()){
+        while (itr.hasNext()) {
 
-            String realImagePath = imageAbsolutePath +"/" + itr.next();
-            Log.d(TAG+"_re",realImagePath);
+            String realImagePath = imageAbsolutePath + "/" + itr.next();
+            Log.d(TAG + "_re", realImagePath);
             File file = new File(realImagePath);
             file.delete();
 
@@ -710,17 +703,35 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     }
 
     /**
-     *
      * 2020.02.23
      * - RecyclerViewAdapter onclick 호출
      * https://thepassion.tistory.com/300
+     *
      * @param v
      * @param position
      */
 
     @Override
     public void onItemClick(View v, int position) {
-        customDialog("removeImage",position);
+        customDialog("removeImage", position);
     }
+
+    public void removeCacheFile() {
+
+
+        for (int i = 0; i < removeCacheFileList.size(); i++) {
+
+
+            File file = new File(removeCacheFileList.get(i));
+            if (file.exists()) {
+                Log.d(TAG, "CacheImage Remove");
+                file.delete();
+            }
+
+
+        }
+
+    }
+
 
 }

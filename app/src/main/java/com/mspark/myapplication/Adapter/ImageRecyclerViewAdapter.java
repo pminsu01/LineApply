@@ -90,6 +90,7 @@ public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecycler
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public ImageView imageView;
 
+
         public MyViewHolder(@NonNull final View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.image_list_item);
@@ -128,10 +129,11 @@ public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecycler
         Bitmap bitmap = imageItemList.get(position).getImageBitmap();
         //Bitmap bitmap = imageBitmapList.get(position);
         holder.imageView.setImageBitmap(bitmap);
+
     }
 
 
-    @SuppressLint("LogConditional")
+
     @Override
     public int getItemCount() {
         Log.d(TAG, "ArrayList getCount : " + String.valueOf(imageItemList.size()));
