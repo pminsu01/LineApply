@@ -14,6 +14,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.icu.util.LocaleData;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -33,6 +34,7 @@ import android.widget.Toast;
 import com.mspark.myapplication.Adapter.ImageRecyclerViewAdapter;
 import com.mspark.myapplication.DataBaseHelper;
 import com.mspark.myapplication.GetImageArrayConvert;
+import com.mspark.myapplication.GetImageConvert;
 import com.mspark.myapplication.GetURLImageAsyncTask;
 import com.mspark.myapplication.ImageItemModel;
 import com.mspark.myapplication.MemoItemModel;
@@ -227,30 +229,44 @@ public class MemoDetailViewActivity extends Activity implements ImageRecyclerVie
         camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                camera.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.onClickColor));
-                cameraText.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.onClickColor));
                 getCameraImage();
 
+            }
+        });
+        cameraText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getCameraImage();
+            }
+        });
+
+        albumText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getAlbumImage();
             }
         });
 
         album.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                album.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.onClickColor));
-                albumText.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.onClickColor));
                 getAlbumImage();
-
             }
         });
 
         link.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                link.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.onClickColor));
-                linkText.setBackgroundColor(getApplicationContext().getResources().getColor(R.color.onClickColor));
                 customDialog("getURLImage", 0);
 
+
+            }
+        });
+
+        linkText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                customDialog("getURLImage", 0);
             }
         });
     }
@@ -335,6 +351,11 @@ public class MemoDetailViewActivity extends Activity implements ImageRecyclerVie
     /**
      * 2020.02.20 Erjuer01
      * - getCamera(). getAlbumImage() intent호출에 따른 결과 값처리
+     * <p>
+     * 2020.02.24
+     * - getCamera() 버그 수정 및 cache 삭제 로그 추가
+     * - 카메라 촬영시 돌아간 사진 다시 바꿔주는 로직 추가.
+     * https://raon-studio.tistory.com/6
      *
      * @param requestCode 카메라:0 , 데이터 내부 앨범:1
      * @param resultCode
@@ -351,20 +372,34 @@ public class MemoDetailViewActivity extends Activity implements ImageRecyclerVie
 
             try {
 
-
-                Log.d("ImageURI", photoUri.toString());
                 tempBitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), photoUri);
-               /* tempBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),data.getData());
-                tempBitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(),photoUri);*/
-                String resultStr = photoUri.toString();
-                Log.e("resultStr", resultStr);
-                String[] strTemp = resultStr.split("cache/");
 
+                /**
+                 *  원래 이미지로 만들기
+                 *  exifinterface : 이미지가 갖고 있는 정보의 집합 클래스
+                 */
+                int exifOrientation;
+                int exifDegree;
+
+                GetImageConvert getImageConvert = new GetImageConvert();
+                ExifInterface exif = new ExifInterface(imageFilePath);
+
+
+                if (exif != null) {
+                    exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                    exifDegree = getImageConvert.exifOrientationToDegrees(exifOrientation);
+                } else {
+                    exifDegree = 0;
+                }
+
+
+                String resultStr = photoUri.toString();
+                String[] strTemp = resultStr.split("cache/");
                 String Strjpg = strTemp[1];
                 Strjpg = Strjpg.substring(0, 13);
 
 
-                imageItemModel.setImageBitmap(tempBitmap);
+                imageItemModel.setImageBitmap(getImageConvert.rotate(tempBitmap, exifDegree));
                 imageItemModel.setImageFileName(Strjpg);
                 setImageViewAdapter(imageItemModel);
                 imageLinearLayout.setVisibility(View.VISIBLE);

@@ -10,6 +10,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -89,11 +90,14 @@ public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecycler
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public ImageView imageView;
+        public ImageView removeButtonView;
 
 
         public MyViewHolder(@NonNull final View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.image_list_item);
+            removeButtonView = itemView.findViewById(R.id.remove_image_Button);
+
             imageView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -127,8 +131,9 @@ public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecycler
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
         Bitmap bitmap = imageItemList.get(position).getImageBitmap();
-        //Bitmap bitmap = imageBitmapList.get(position);
+        holder.removeButtonView.setImageResource(R.drawable.x_mark);
         holder.imageView.setImageBitmap(bitmap);
+
 
     }
 

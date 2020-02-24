@@ -4,6 +4,8 @@ package com.mspark.myapplication;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,6 +18,8 @@ public class GetImageConvert {
 
     /**
      *
+     * 20.02.24 Erjuer01
+     * - 화면 Rotate 로직 추가.
      * @param context
      * @param bitmap
      * @param fileName
@@ -51,5 +55,22 @@ public class GetImageConvert {
 
         Bitmap bitmap = BitmapFactory.decodeFile(imgFilePath);
         return bitmap;
+    }
+
+    public int exifOrientationToDegrees(int exifOrientation) {
+        if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            return 90;
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            return 180;
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            return 270;
+        }
+        return 0;
+    }
+
+    public Bitmap rotate(Bitmap bitmap, float degree) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 }

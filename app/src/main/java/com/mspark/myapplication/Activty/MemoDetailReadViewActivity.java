@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -279,14 +280,32 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
     public void imageSelect() {
 
 
-        ImageView camera = findViewById(R.id.camera_view);
-        ImageView album = findViewById(R.id.album_view);
-        ImageView link = findViewById(R.id.link_view);
+        final ImageView camera = findViewById(R.id.camera_view);
+        final TextView cameraText = findViewById(R.id.text_camera);
+        final ImageView album = findViewById(R.id.album_view);
+        final TextView albumText = findViewById(R.id.text_album);
+        final ImageView link = findViewById(R.id.link_view);
+        final TextView linkText = findViewById(R.id.text_link);
+
 
         camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 getCameraImage();
+
+            }
+        });
+        cameraText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getCameraImage();
+            }
+        });
+
+        albumText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getAlbumImage();
             }
         });
 
@@ -301,12 +320,22 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
             @Override
             public void onClick(View view) {
                 customDialog("getURLImage", 0);
+
+
+            }
+        });
+
+        linkText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                customDialog("getURLImage", 0);
             }
         });
     }
 
 
-    /**2020.02.24 Erjuer01
+    /**
+     * 2020.02.24 Erjuer01
      * getCameraImage() : 카메라 실행
      * cache파일 저장으로 수정
      */
@@ -325,7 +354,6 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
                 photoUri = FileProvider.getUriForFile(this,
                         "com.mspark.myapplication",
                         photoFile);
-
 
 
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
@@ -375,11 +403,14 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
 
     }
 
-
     /**
      * 2020.02.20 Erjuer01
      * - getCamera(). getAlbumImage() intent호출에 따른 결과 값처리
      *
+     * 2020.02.24
+     * - getCamera() 버그 수정 및 cache 삭제 로그 추가
+     * - 카메라 촬영시 돌아간 사진 다시 바꿔주는 로직 추가.
+     * https://raon-studio.tistory.com/6
      * @param requestCode 카메라:0 , 데이터 내부 앨범:1
      * @param resultCode
      * @param data
@@ -396,12 +427,30 @@ public class MemoDetailReadViewActivity extends Activity implements ImageRecycle
 
             try {
 
-                tempBitmap =  MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(),photoUri);
+                tempBitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), photoUri);
+
+                /**
+                 *  원래 이미지로 만들기
+                 *  exifinterface : 이미지가 갖고 있는 정보의 집합 클래스
+                 */
+                int exifOrientation;
+                int exifDegree;
+
+                GetImageConvert getImageConvert = new GetImageConvert();
+                ExifInterface exif = new ExifInterface(imageFilePath);
+
+
+                if (exif != null) {
+                    exifOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                    exifDegree = getImageConvert.exifOrientationToDegrees(exifOrientation);
+                } else {
+                    exifDegree = 0;
+                }
 
                 String strPhotoURI = photoUri.toString();
 
                 String[] strPhotoURITemp = strPhotoURI.split("cache/");
-                String resultURI = strPhotoURITemp[1].substring(0,13);
+                String resultURI = strPhotoURITemp[1].substring(0, 13);
 
 
                 imageItemModel.setImageBitmap(tempBitmap);
